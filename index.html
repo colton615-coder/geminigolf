@@ -91,7 +91,7 @@
         /* Navigation */
         #nav-bar {
             display: flex;
-            justify-content: space-between;
+            justify-content: space-around; /* Changed to space-around for better spacing */
             margin-bottom: 20px;
         }
         
@@ -105,11 +105,15 @@
             padding: 10px;
         }
 
-        /* View Shots Section */
-        #shots-list-container {
-            display: none; /* Hidden by default */
+        /* Sections */
+        .section {
+            display: none;
+        }
+        .section.active {
+            display: block;
         }
         
+        /* Shot List */
         #shots-list {
             list-style: none;
             padding: 0;
@@ -151,6 +155,32 @@
             margin-top: 20px;
         }
 
+        /* Statistics Section */
+        #stats-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .stat-item {
+            background-color: #f9f9f9;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .stat-label {
+            font-weight: bold;
+        }
+
+        .stat-value {
+            font-size: 1.2em;
+            color: var(--primary-color);
+        }
     </style>
 </head>
 <body>
@@ -159,11 +189,12 @@
         <h1>⛳️ Golf Tracker</h1>
         
         <div id="nav-bar">
-            <button class="nav-btn" id="add-shot-nav">Add Shot</button>
-            <button class="nav-btn" id="view-shots-nav">View Shots</button>
+            <button class="nav-btn" data-section="add-shot-container">Add Shot</button>
+            <button class="nav-btn" data-section="shots-list-container">View Shots</button>
+            <button class="nav-btn" data-section="stats-container">Stats</button>
         </div>
 
-        <div id="add-shot-container" class="card">
+        <div id="add-shot-container" class="card section active">
             <h2>Add New Shot</h2>
             <div class="input-group">
                 <label for="club">Club Used:</label>
@@ -183,10 +214,15 @@
             <button class="btn btn-primary" id="add-shot-btn">Add Shot</button>
         </div>
 
-        <div id="shots-list-container" class="card">
+        <div id="shots-list-container" class="card section">
             <h2>Recorded Shots</h2>
             <ul id="shots-list"></ul>
             <button class="btn btn-secondary" id="clear-all-btn">Clear All Shots</button>
+        </div>
+
+        <div id="stats-container" class="card section">
+            <h2>Statistics</h2>
+            <ul id="stats-list"></ul>
         </div>
 
     </div>
@@ -194,16 +230,15 @@
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             // DOM Elements
-            const addShotContainer = document.getElementById('add-shot-container');
-            const shotsListContainer = document.getElementById('shots-list-container');
+            const navButtons = document.querySelectorAll('.nav-btn');
+            const sections = document.querySelectorAll('.section');
             const clubInput = document.getElementById('club');
             const distanceInput = document.getElementById('distance');
             const lieInput = document.getElementById('lie');
             const addShotBtn = document.getElementById('add-shot-btn');
             const shotsList = document.getElementById('shots-list');
-            const addShotNav = document.getElementById('add-shot-nav');
-            const viewShotsNav = document.getElementById('view-shots-nav');
             const clearAllBtn = document.getElementById('clear-all-btn');
+            const statsList = document.getElementById('stats-list');
 
             // Data
             let shots = JSON.parse(localStorage.getItem('golfShots')) || [];
@@ -241,24 +276,89 @@
                 });
             }
 
-            function showViewShots() {
-                addShotContainer.style.display = 'none';
-                shotsListContainer.style.display = 'block';
-                renderShots();
+            function calculateAndRenderStats() {
+                statsList.innerHTML = '';
+
+                if (shots.length === 0) {
+                    statsList.innerHTML = '<p class="no-shots-message">No shots recorded yet.</p>';
+                    return;
+                }
+
+                // Total Shots Count
+                const totalShotsItem = document.createElement('li');
+                totalShotsItem.classList.add('stat-item');
+                totalShotsItem.innerHTML = `<span class="stat-label">Total Shots:</span><span class="stat-value">${shots.length}</span>`;
+                statsList.appendChild(totalShotsItem);
+
+                // Best Shot (Longest Distance)
+                const sortedByDistance = [...shots].sort((a, b) => b.distance - a.distance);
+                if (sortedByDistance.length > 0) {
+                    const bestShot = sortedByDistance[0];
+                    const bestShotItem = document.createElement('li');
+                    bestShotItem.classList.add('stat-item');
+                    bestShotItem.innerHTML = `<span class="stat-label">Longest Shot:</span><span class="stat-value">${bestShot.distance} yards (${bestShot.club})</span>`;
+                    statsList.appendChild(bestShotItem);
+                }
+
+                // Average Distance by Club
+                const clubDistances = {};
+                shots.forEach(shot => {
+                    const club = shot.club.toLowerCase();
+                    if (!clubDistances[club]) {
+                        clubDistances[club] = { total: 0, count: 0 };
+                    }
+                    clubDistances[club].total += parseFloat(shot.distance);
+                    clubDistances[club].count++;
+                });
+
+                const clubAverages = Object.entries(clubDistances).map(([club, data]) => {
+                    return {
+                        club: club.charAt(0).toUpperCase() + club.slice(1),
+                        average: (data.total / data.count).toFixed(1)
+                    };
+                }).sort((a, b) => a.average - b.average);
+
+                const clubHeader = document.createElement('li');
+                clubHeader.innerHTML = '<h4>Average Distance by Club</h4>';
+                statsList.appendChild(clubHeader);
+                
+                clubAverages.forEach(clubStat => {
+                    const clubStatItem = document.createElement('li');
+                    clubStatItem.classList.add('stat-item');
+                    clubStatItem.innerHTML = `<span class="stat-label">${clubStat.club}:</span><span class="stat-value">${clubStat.average} yds</span>`;
+                    statsList.appendChild(clubStatItem);
+                });
             }
 
-            function showAddShot() {
-                addShotContainer.style.display = 'block';
-                shotsListContainer.style.display = 'none';
+            // Navigation Logic
+            function showSection(sectionId) {
+                sections.forEach(section => {
+                    section.classList.remove('active');
+                });
+                document.getElementById(sectionId).classList.add('active');
+
+                // Update content based on section
+                if (sectionId === 'shots-list-container') {
+                    renderShots();
+                } else if (sectionId === 'stats-container') {
+                    calculateAndRenderStats();
+                }
             }
 
             // Event Listeners
+            navButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    const sectionId = button.getAttribute('data-section');
+                    showSection(sectionId);
+                });
+            });
+
             addShotBtn.addEventListener('click', () => {
                 const club = clubInput.value.trim();
-                const distance = distanceInput.value.trim();
+                const distance = parseFloat(distanceInput.value.trim());
                 const lie = lieInput.value.trim();
 
-                if (club && distance && lie) {
+                if (club && distance && lie && !isNaN(distance)) {
                     const newShot = {
                         club,
                         distance,
@@ -272,7 +372,7 @@
                     lieInput.value = '';
                     alert('Shot added successfully!');
                 } else {
-                    alert('Please fill out all fields.');
+                    alert('Please ensure all fields are filled correctly.');
                 }
             });
 
@@ -294,11 +394,8 @@
                 }
             });
 
-            addShotNav.addEventListener('click', showAddShot);
-            viewShotsNav.addEventListener('click', showViewShots);
-
             // Initial view
-            showAddShot();
+            showSection('add-shot-container');
         });
     </script>
 </body>
