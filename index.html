@@ -217,6 +217,18 @@
         .course-item:hover {
             background-color: #eee;
         }
+
+        /* Map Section */
+        #map-container {
+            text-align: center;
+        }
+
+        #long-island-map {
+            width: 100%;
+            height: 400px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+        }
     </style>
 </head>
 <body>
@@ -229,6 +241,7 @@
             <button class="nav-btn" data-section="shots-list-container">View Shots</button>
             <button class="nav-btn" data-section="stats-container">Stats</button>
             <button class="nav-btn" data-section="course-container">Courses</button>
+            <button class="nav-btn" data-section="map-container">Map</button>
         </div>
 
         <div id="current-course-display"></div>
@@ -269,6 +282,15 @@
             <ul id="course-list"></ul>
         </div>
 
+        <div id="map-container" class="card section">
+            <h2>Long Island Golf Courses</h2>
+            <p style="text-align: center; color: #888;">Note: This is a general map for reference, not for live GPS tracking.</p>
+            <iframe id="long-island-map" frameborder="0" style="border:0"
+                src="https://www.google.com/maps/embed/v1/place?key=YOUR_API_KEY&q=Long+Island+golf+courses"
+                allowfullscreen>
+            </iframe>
+        </div>
+
     </div>
 
     <script>
@@ -289,15 +311,41 @@
             // Data
             const longIslandCourses = [
                 'Bethpage Black',
+                'Bethpage Red',
+                'Bethpage Blue',
+                'Bethpage Green',
+                'Bethpage Yellow',
                 'Shinnecock Hills',
-                'Piping Rock',
-                'Sebonack',
+                'Piping Rock Club',
+                'Sebonack Golf Club',
                 'Maidstone Club',
-                'Rockville Links',
-                'Harbor Links',
+                'Rockville Links Club',
+                'Harbor Links Golf Course',
                 'Eisenhower Park',
-                'Mill Pond',
-                'Indian Hills'
+                'Mill Pond Golf Course',
+                'Indian Hills Country Club',
+                'Huntington Crescent Club',
+                'Southward Ho Country Club',
+                'Fresh Meadow Country Club',
+                'Garden City Golf Club',
+                'Garden City Country Club',
+                'Hempstead Golf & Country Club',
+                'Plandome Country Club',
+                'Pine Hollow Country Club',
+                'Old Westbury Golf & Country Club',
+                'Tam O\'Shanter Golf Club',
+                'North Hills Country Club',
+                'Woodside Acres Golf Club',
+                'Glen Head Country Club',
+                'Colonial Springs Golf Club',
+                'The Hamlet Golf & Country Club',
+                'Brentwood Country Club',
+                'Lido Golf Club',
+                'Southampton Golf Club',
+                'Sebonack Golf Club',
+                'The Bridge Golf Club',
+                'The Noyac Golf Club',
+                'North Fork Country Club'
             ];
             let shots = JSON.parse(localStorage.getItem('golfShots')) || [];
             let currentCourse = localStorage.getItem('currentCourse') || null;
@@ -405,7 +453,8 @@
             
             function renderCourses() {
                 courseList.innerHTML = '';
-                longIslandCourses.forEach(course => {
+                const sortedCourses = [...longIslandCourses].sort();
+                sortedCourses.forEach(course => {
                     const li = document.createElement('li');
                     li.classList.add('course-item');
                     li.textContent = course;
