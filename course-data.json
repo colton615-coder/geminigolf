@@ -1,0 +1,24 @@
+{
+    "name": "Bethpage Black Course",
+    "location": "Farmingdale, NY",
+    "holes": [
+        {
+            "holeNumber": 1,
+            "par": 4,
+            "teeCoords": { "lat": 40.730302, "lng": -73.447551 },
+            "greenCoords": { "lat": 40.730101, "lng": -73.443026 }
+        },
+        {
+            "holeNumber": 2,
+            "par": 4,
+            "teeCoords": { "lat": 40.731110, "lng": -73.443190 },
+            "greenCoords": { "lat": 40.731730, "lng": -73.439520 }
+        },
+        {
+            "holeNumber": 3,
+            "par": 3,
+            "teeCoords": { "lat": 40.732350, "lng": -73.439110 },
+            "greenCoords": { "lat": 40.732780, "lng": -73.435880 }
+        }
+    ]
+}
